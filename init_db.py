@@ -68,7 +68,10 @@ def migrate_columns():
 
 
 print("🔧 Running schema migration…")
-migrate_columns()
+#migrate_columns()
+models.Base.metadata.create_all(bind=engine)  # ← テーブル作成
+print("🔧 Running schema migration…")
+migrate_columns()  # ← その後にマイグレーション
 
 # ─── Create tables from models (idempotent) ───────────────────────────────────
 models.Base.metadata.create_all(bind=engine)
