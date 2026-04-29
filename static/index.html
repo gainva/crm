@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中村留 代理商报备系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+<!-- ─── Login Page ─────────────────────────────────────────────── -->
+<div id="login-page" class="page-login hidden">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="/static/images/nakamura-logo.png" alt="中村留精密工業株式会社" class="login-logo-img" />
+      <div class="login-brand-sub" id="login-subtitle">代理商报备系统管理</div>
+    </div>
+    <div class="lang-switcher-login">
+      <button onclick="setLang('zh')" data-lang="zh">中文</button>
+      <button onclick="setLang('en')" data-lang="en">English</button>
+      <button onclick="setLang('ja')" data-lang="ja">日本語</button>
+    </div>
+    <div id="login-tabs" class="login-tabs">
+      <button class="tab-btn active" onclick="showLoginTab('login')" id="tab-login" data-i18n="login"></button>
+      <button class="tab-btn" onclick="showLoginTab('register')" id="tab-register" data-i18n="register"></button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label data-i18n="username_or_email"></label>
+        <input type="text" id="login-username" required autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label data-i18n="password"></label>
+        <input type="password" id="login-password" required autocomplete="current-password" />
+      </div>
+      <div id="login-error" class="form-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" data-i18n="login"></button>
+    </form>
+
+    <!-- Register Form (invitation only) -->
+    <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+      <div class="warning-box" style="margin-bottom:12px" data-i18n="invite_code_required"></div>
+      <div class="form-group">
+        <label><span class="req">*</span> <span data-i18n="invite_code"></span></label>
+        <input type="text" id="reg-invite-code" required
+               style="font-family:monospace;font-size:15px;letter-spacing:3px;text-transform:uppercase"
+               placeholder="XXXXXXXXXX" maxlength="10" oninput="this.value=this.value.toUpperCase()" />
+        <div id="invite-validate-msg" style="font-size:12px;margin-top:4px"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="username"></label>
+          <input type="text" id="reg-username" required />
+        </div>
+        <div class="form-group">
+          <label data-i18n="email"></label>
+          <input type="email" id="reg-email" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="company_name_cn"></label>
+        <input type="text" id="reg-company-cn" required />
+      </div>
+      <div class="form-group">
+        <label data-i18n="contact_name"></label>
+        <input type="text" id="reg-contact" required />
+      </div>
+      <div class="form-group">
+        <label data-i18n="phone"></label>
+        <input type="text" id="reg-phone" />
+      </div>
+      <div class="form-group">
+        <label data-i18n="password"></label>
+        <input type="password" id="reg-password" required />
+      </div>
+      <div id="register-error" class="form-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" data-i18n="register"></button>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Main App ───────────────────────────────────────────────── -->
+<div id="app" class="app-layout hidden">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <span class="logo-mark-sm">NT</span>
+        <span class="sidebar-brand" data-i18n="app_title"></span>
+      </div>
+      <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Collapse">&#9776;</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" onclick="navigate('dashboard')" data-page="dashboard">
+        <span class="nav-icon">&#9634;</span><span class="nav-label" data-i18n="nav_dashboard"></span>
+      </a>
+      <!-- Dealer nav -->
+      <a href="#" class="nav-item dealer-only" onclick="navigate('new-report')" data-page="new-report">
+        <span class="nav-icon">&#43;</span><span class="nav-label" data-i18n="nav_new_report"></span>
+      </a>
+      <a href="#" class="nav-item dealer-only" onclick="navigate('my-reports')" data-page="my-reports">
+        <span class="nav-icon">&#128196;</span><span class="nav-label" data-i18n="nav_my_reports"></span>
+      </a>
+      <a href="#" class="nav-item dealer-only" onclick="navigate('my-customers')" data-page="my-customers">
+        <span class="nav-icon">&#128101;</span><span class="nav-label" data-i18n="nav_my_customers"></span>
+      </a>
+      <!-- Platform nav -->
+      <a href="#" class="nav-item platform-only" onclick="navigate('reviews')" data-page="reviews">
+        <span class="nav-icon">&#10003;</span><span class="nav-label" data-i18n="nav_reviews"></span>
+        <span id="review-badge" class="badge hidden">0</span>
+      </a>
+      <a href="#" class="nav-item platform-only" onclick="navigate('all-reports')" data-page="all-reports">
+        <span class="nav-icon">&#128196;</span><span class="nav-label" data-i18n="nav_all_reports"></span>
+      </a>
+      <a href="#" class="nav-item platform-only" onclick="navigate('dealers')" data-page="dealers">
+        <span class="nav-icon">&#127970;</span><span class="nav-label" data-i18n="nav_dealers"></span>
+      </a>
+      <a href="#" class="nav-item platform-only" onclick="navigate('all-customers')" data-page="all-customers">
+        <span class="nav-icon">&#128101;</span><span class="nav-label" data-i18n="nav_customers"></span>
+      </a>
+      <a href="#" class="nav-item platform-only" onclick="navigate('products')" data-page="products">
+        <span class="nav-icon">&#9881;</span><span class="nav-label" data-i18n="nav_products"></span>
+      </a>
+      <a href="#" class="nav-item admin-only" onclick="navigate('employees')" data-page="employees">
+        <span class="nav-icon">&#128100;</span><span class="nav-label" data-i18n="nav_employees"></span>
+      </a>
+      <a href="#" class="nav-item" onclick="navigate('templates')" data-page="templates">
+        <span class="nav-icon">&#128462;</span><span class="nav-label" data-i18n="nav_templates"></span>
+      </a>
+      <a href="#" class="nav-item platform-only" onclick="navigate('invitations')" data-page="invitations">
+        <span class="nav-icon">&#128138;</span><span class="nav-label" data-i18n="nav_invitations"></span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item" onclick="navigate('profile')" data-page="profile">
+        <span class="nav-icon">&#128100;</span><span class="nav-label" data-i18n="nav_profile"></span>
+      </a>
+      <a href="#" class="nav-item" onclick="handleLogout()">
+        <span class="nav-icon">&#8594;</span><span class="nav-label" data-i18n="logout"></span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 id="page-title" class="page-title"></h1>
+      </div>
+      <div class="topbar-right">
+        <div class="lang-switcher">
+          <button onclick="setLang('zh')" data-lang="zh">中</button>
+          <button onclick="setLang('en')" data-lang="en">EN</button>
+          <button onclick="setLang('ja')" data-lang="ja">日</button>
+        </div>
+        <button class="notif-btn" onclick="toggleNotifications()" title="Notifications">
+          &#128276;<span id="notif-badge" class="badge hidden">0</span>
+        </button>
+        <div id="notif-panel" class="notif-panel hidden"></div>
+        <span id="topbar-user" class="topbar-user"></span>
+      </div>
+    </header>
+
+    <div id="content" class="content-area">
+      <div class="loading-spinner" id="content-loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ─── Modal ──────────────────────────────────────────────────── -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()">
+  <div id="modal-box" class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modal-title"></h3>
+      <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    </div>
+    <div id="modal-body" class="modal-body"></div>
+  </div>
+</div>
+
+<!-- ─── Toast ──────────────────────────────────────────────────── -->
+<div id="toast-container" class="toast-container"></div>
+
+<script src="/static/js/i18n.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
